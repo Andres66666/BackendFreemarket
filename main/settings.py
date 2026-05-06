@@ -13,6 +13,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "freemarkett.netlify.app",
     "backendfreemarket.onrender.com",
+    
 ]
 
 
@@ -74,10 +75,10 @@ DATABASES = {
 """ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "freemarket_wvhe",
-        "USER": "freemarket_wvhe_user",
-        "PASSWORD": "ffg6Z9pvkEAdoQ0rgm32QIC3VXuxIh8a",
-        "HOST": "dpg-d7pn7khj2pic73btc41g-a.oregon-postgres.render.com",
+        "NAME": "freemarket_ehrq",
+        "USER": "freemarket_ehrq_user",
+        "PASSWORD": "iu2dNGTkOeMSWZkGViJqBTlQnjDgzu6V",
+        "HOST": "dpg-d7ts4e0sfn5c73ce84l0-a.oregon-postgres.render.com",
         "PORT": "5432",
     }
 } """
