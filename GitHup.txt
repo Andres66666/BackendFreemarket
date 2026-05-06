@@ -15,7 +15,7 @@ git init
 git status
 git add .
 git commit -m "Produccion hoydia "
-git remote add origin https://github.com/freemarket0620/FrontendFreemarket.git
+git remote add origin https://github.com/freemarket0620-art/FrontendFreemarket.git
 git push -u origin main
 
  
@@ -30,7 +30,7 @@ git init
 git status
 git add .
 git commit -m "Produccion hoydia "
-git remote add origin https://github.com/freemarket0620/BackendFreemarket.git
+git remote add origin https://github.com/freemarket0620-art/BackendFreemarket.git
 git push -u origin main
 
 

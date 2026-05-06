@@ -13,7 +13,6 @@ ALLOWED_HOSTS = [
     "localhost",
     "freemarkett.netlify.app",
     "backendfreemarket.onrender.com",
-    
 ]
 
 
@@ -61,7 +60,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "main.wsgi.application"
-""" 
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -71,8 +70,8 @@ DATABASES = {
         "HOST": "localhost",
         "PORT": "5432",
     }
-} """
-DATABASES = {
+}
+""" DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "freemarket_wvhe",
@@ -81,7 +80,7 @@ DATABASES = {
         "HOST": "dpg-d7pn7khj2pic73btc41g-a.oregon-postgres.render.com",
         "PORT": "5432",
     }
-}
+} """
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
