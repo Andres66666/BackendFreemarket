@@ -72,12 +72,8 @@ class ProductosViewSet(viewsets.ModelViewSet):
                 {"error": "La categoría especificada no existe."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if "imagen_productos" in request.FILES:
-            uploaded_image = cloudinary.uploader.upload(
-                request.FILES["imagen_productos"]
-            )
-            data["imagen_productos"] = uploaded_image.get("url")
-            print("Uploaded Image URL:", data["imagen_productos"])  # Debugging line
+        # 🔥 QUITADO TODO LO DE imagen_productos
+        
         producto = Productos.objects.create(**data)
         return Response(
             ProductoSerializer(producto).data, status=status.HTTP_201_CREATED
@@ -87,11 +83,9 @@ class ProductosViewSet(viewsets.ModelViewSet):
         partial = True
         instance = self.get_object()
         data = request.data.copy()
-        if "imagen_productos" in request.FILES:
-            uploaded_image = cloudinary.uploader.upload(
-                request.FILES["imagen_productos"]
-            )
-            data["imagen_productos"] = uploaded_image.get("url")
+        
+        # 🔥 QUITADO TODO LO DE imagen_productos
+        # if "imagen_productos" in request.FILES: ← ELIMINADO
 
         categoria_data = request.data.get("categoria")
         if isinstance(categoria_data, str):
@@ -104,12 +98,9 @@ class ProductosViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(instance, data=data, partial=partial)
         serializer.is_valid(raise_exception=True)
-
         self.perform_update(serializer)
-
         return Response(serializer.data)
-
-
+    
 class VentasViewSet(viewsets.ModelViewSet):
     queryset = Ventas.objects.all()
     serializer_class = VentaSerializer
@@ -144,55 +135,26 @@ class VentasViewSet(viewsets.ModelViewSet):
         venta = Ventas.objects.create(**data)
 
         return Response(VentaSerializer(venta).data, status=status.HTTP_201_CREATED)
-
-
+        
 class DetallesVentasViewSet(viewsets.ModelViewSet):
     queryset = DetallesVentas.objects.all()
     serializer_class = DetallesVentasSerializer
 
     def create(self, request, *args, **kwargs):
-        # Obtener el último registro de ventas
-        try:
-            ultima_venta = Ventas.objects.latest(
-                "id"
-            )  # Asumiendo que 'id' es el campo que se usa para ordenar
-        except Ventas.DoesNotExist:
-            return Response(
-                {"error": "No hay ventas registradas."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Crear el detalle de venta
-        serializer = self.get_serializer(data=request.data)
+        print("🔥 DATOS RECIBIDOS:", request.data)
+        
+        data = request.data.copy()
+        print("🔄 DATOS FINALES:", data)
+        
+        serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            # Asignar el ID de la última venta al detalle
-            serializer.validated_data["venta"] = (
-                ultima_venta  # Asumiendo que 'venta' es el campo en DetallesVentas
-            )
+            detalle = serializer.save()
+            print("✅ CREADO!")
+            return Response(serializer.data, status=201)
+        
+        print("❌ ERRORES:", serializer.errors)
+        return Response(serializer.errors, status=400)
 
-            # Asegúrate de que el producto se esté asignando correctamente
-            producto_id = request.data.get(
-                "producto_id"
-            )  # Asegúrate de que el ID del producto se esté enviando
-            if producto_id:
-                try:
-                    producto = Productos.objects.get(
-                        id=producto_id
-                    )  # Cambia 'Producto' por 'Productos'
-                    serializer.validated_data["producto"] = (
-                        producto  # Asignar el producto
-                    )
-                except Productos.DoesNotExist:  # Cambia 'Producto' por 'Productos'
-                    return Response(
-                        {"error": "El producto especificado no existe."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            detalle_venta = serializer.save()
-            return Response(
-                self.get_serializer(detalle_venta).data, status=status.HTTP_201_CREATED
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class EfectivoViewSet(viewsets.ModelViewSet):

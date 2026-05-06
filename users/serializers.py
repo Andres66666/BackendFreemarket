@@ -82,13 +82,21 @@ class VentaSerializer(serializers.ModelSerializer):
 
 
 class DetallesVentasSerializer(serializers.ModelSerializer):
+    producto_id = serializers.PrimaryKeyRelatedField(
+        queryset=Productos.objects.all(),
+        source='producto',
+        write_only=True
+    )
+    venta_id = serializers.PrimaryKeyRelatedField(
+        queryset=Ventas.objects.all(),
+        source='venta',
+        write_only=True
+    )
     producto = ProductoSerializer(read_only=True)
-    venta = VentaSerializer(read_only=True)
-
+    venta = VentaSerializer(read_only=True) 
     class Meta:
         model = DetallesVentas
         fields = "__all__"
-
 
 class EfectivoSerializer(serializers.ModelSerializer):
     class Meta:
