@@ -62,7 +62,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "main.wsgi.application"
 
-DATABASES = {
+""" DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "Freemarket",
@@ -71,8 +71,8 @@ DATABASES = {
         "HOST": "localhost",
         "PORT": "5432",
     }
-}
-""" DATABASES = {
+} """
+DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "freemarket_ehrq",
@@ -81,7 +81,7 @@ DATABASES = {
         "HOST": "dpg-d7ts4e0sfn5c73ce84l0-a.oregon-postgres.render.com",
         "PORT": "5432",
     }
-} """
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
