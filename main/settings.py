@@ -75,13 +75,13 @@ WSGI_APPLICATION = "main.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "freemarket_ehrq",
-        "USER": "freemarket_ehrq_user",
-        "PASSWORD": "iu2dNGTkOeMSWZkGViJqBTlQnjDgzu6V",
-        "HOST": "dpg-d7ts4e0sfn5c73ce84l0-a.oregon-postgres.render.com",
+        "NAME": "freemarket_n2cv",
+        "USER": "freemarket_n2cv_user",
+        "PASSWORD": "7vbXWbbb8g1KTsfadr8PmNEHORxX24dR",
+        "HOST": "dpg-d7uc6b7lk1mc73ehhof0-a.oregon-postgres.render.com",
         "PORT": "5432",
     }
-}
+}   
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
