@@ -1,21 +1,28 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from decouple import config
 import cloudinary
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# =========================
+# SECURITY
+# =========================
+
+SECRET_KEY = config("SECRET_KEY")
 SECRET_KEY = "django-insecure-kw5d5g509&zw(cn14nwvrwa$-$uh&)i9j^w#hajmu_wi1udj5m"
-DEBUG = True
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "freemarkett.netlify.app",
     "backendfreemarket.onrender.com",
-    
 ]
 
+# =========================
+# APPS
+# =========================
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -24,16 +31,29 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "cloudinary",
+
+    # Third Party
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
+    "cloudinary",
+    "cloudinary_storage",
+
+    # Local Apps
     "users",
 ]
+
+# =========================
+# MIDDLEWARE
+# =========================
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+
+    # WhiteNoise
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -42,7 +62,17 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+# =========================
+# URLS / WSGI
+# =========================
+
 ROOT_URLCONF = "main.urls"
+
+WSGI_APPLICATION = "main.wsgi.application"
+
+# =========================
+# TEMPLATES
+# =========================
 
 TEMPLATES = [
     {
@@ -60,30 +90,28 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "main.wsgi.application"
+# =========================
+# DATABASE
+# =========================
 
-""" DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "Freemarket",
-        "USER": "postgres",
-        "PASSWORD": "13247291",
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
-} """
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "freemarket_n2cv",
-        "USER": "freemarket_n2cv_user",
-        "PASSWORD": "7vbXWbbb8g1KTsfadr8PmNEHORxX24dR",
-        "HOST": "dpg-d7uc6b7lk1mc73ehhof0-a.oregon-postgres.render.com",
-        "PORT": "5432",
+        "NAME": config("DB_NAME"),
+        "USER": config("DB_USER"),
+        "PASSWORD": config("DB_PASSWORD"),
+        "HOST": config("DB_HOST"),
+        "PORT": config("DB_PORT"),
+        "OPTIONS": {
+            "sslmode": "require",
+        },
     }
-}   
+}
 
-# Password validation
+# =========================
+# PASSWORD VALIDATORS
+# =========================
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
@@ -99,37 +127,59 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
-LANGUAGE_CODE = "es-es"  # Cambiado a español
-TIME_ZONE = "America/Lima"  # Ajusta según tu zona horaria
+# =========================
+# INTERNATIONALIZATION
+# =========================
+
+LANGUAGE_CODE = "es-es"
+
+TIME_ZONE = "America/Lima"
+
 USE_I18N = True
+
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# =========================
+# STATIC FILES
+# =========================
+
 STATIC_URL = "/static/"
+
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-MEDIA_URL = "/media/"
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
-# Configuración de Cloudinary (asegúrate que usa variables de entorno)
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": os.getenv("dz45dhxii"),
-    "API_KEY": os.getenv("419624749789857"),
-    "API_SECRET": os.getenv("lOJH1C6pH2HT9IaeMn89fhVF3Vk"),
-    "SECURE": True,
-}
-cloudinary.config(
-    cloud_name="dz45dhxii",
-    api_key="419624749789857",
-    api_secret="lOJH1C6pH2HT9IaeMn89fhVF3Vk",
+STATICFILES_STORAGE = (
+    "whitenoise.storage.CompressedManifestStaticFilesStorage"
 )
 
-CLOUDINARY_URL = "cloudinary://API_KEY:API_SECRET@CLOUD_NAME"
+# =========================
+# MEDIA FILES
+# =========================
 
-# REST Framework
+MEDIA_URL = "/media/"
+
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+# =========================
+# CLOUDINARY
+# =========================
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": config("CLOUDINARY_API_KEY"),
+    "API_SECRET": config("CLOUDINARY_API_SECRET"),
+    "SECURE": True,
+}
+
+cloudinary.config(
+    cloud_name=config("CLOUDINARY_CLOUD_NAME"),
+    api_key=config("CLOUDINARY_API_KEY"),
+    api_secret=config("CLOUDINARY_API_SECRET"),
+)
+
+# =========================
+# DJANGO REST FRAMEWORK
+# =========================
+
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
@@ -137,38 +187,75 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-# JWT Settings
+# =========================
+# JWT
+# =========================
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": True,
 }
 
+# =========================
+# CORS
+# =========================
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-CORS_ALLOW_ALL_ORIGINS = False  # Más seguro que True en producción
+CORS_ALLOW_ALL_ORIGINS = False
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
     "https://freemarkett.netlify.app",
-    "https://backendfreemarket.onrender.com",
 ]
 
-CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS.copy()
+CSRF_TRUSTED_ORIGINS = [
+    "https://freemarkett.netlify.app",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 
-# Configuraciones de seguridad para producción
+# =========================
+# SECURITY PRODUCTION
+# =========================
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
+
     SESSION_COOKIE_SECURE = True
+
     CSRF_COOKIE_SECURE = True
+
     SECURE_HSTS_SECONDS = 31536000
+
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
     SECURE_HSTS_PRELOAD = True
+
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Auto primary key
+# =========================
+# DEFAULT PK
+# =========================
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# =========================
+# LOGS
+# =========================
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG",
+    },
+}
