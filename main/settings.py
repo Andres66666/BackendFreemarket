@@ -18,6 +18,8 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "backendfreemarket.onrender.com",
+    "freemarkett.netlify.app",
+
 ]
 
 # =========================
@@ -209,10 +211,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
     "https://freemarkett.netlify.app",
+    "https://backendfreemarket.onrender.com",
+
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://freemarkett.netlify.app",
+    "https://backendfreemarket.onrender.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
