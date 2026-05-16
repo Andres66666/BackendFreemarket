@@ -107,6 +107,16 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
+        "NAME": "freemarket_n2cv",
+        "USER": "freemarket_n2cv_user",
+        "PASSWORD": "7vbXWbbb8g1KTsfadr8PmNEHORxX24dR",
+        "HOST": "dpg-d7uc6b7lk1mc73ehhof0-a.oregon-postgres.render.com",
+        "PORT": "5432",
+    }
+}
+""" DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": "tienda",
         "USER": "postgres",
         "PASSWORD": "13247291",
@@ -114,7 +124,7 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-
+ """
 # =========================
 # PASSWORD VALIDATORS
 # =========================
