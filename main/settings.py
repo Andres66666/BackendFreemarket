@@ -17,7 +17,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
-    "backendfreemarket.onrender.com",
+    "backendfreemarket-1.onrender.com",
     "freemarkett.netlify.app",
 ]
 
@@ -107,10 +107,10 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "freemarket_n2cv",
-        "USER": "freemarket_n2cv_user",
-        "PASSWORD": "7vbXWbbb8g1KTsfadr8PmNEHORxX24dR",
-        "HOST": "dpg-d7uc6b7lk1mc73ehhof0-a.oregon-postgres.render.com",
+        "NAME": "freemarket_f67s",
+        "USER": "freemarket_f67s_user",
+        "PASSWORD": "ASWmW0VCGeNaqE3rFrWI4DrCLpOSSspX",
+        "HOST": "dpg-d83u8breo5us73dou8og-a.oregon-postgres.render.com",
         "PORT": "5432",
     }
 }
@@ -224,12 +224,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:4200",
     "https://freemarkett.netlify.app",
-    "https://backendfreemarket.onrender.com",
+    "https://backendfreemarket-1.onrender.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://freemarkett.netlify.app",
-    "https://backendfreemarket.onrender.com",
+    "https://backendfreemarket-1.onrender.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
