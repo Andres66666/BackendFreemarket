@@ -12,14 +12,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config("SECRET_KEY")
 SECRET_KEY = "django-insecure-kw5d5g509&zw(cn14nwvrwa$-$uh&)i9j^w#hajmu_wi1udj5m"
-DEBUG = config("DEBUG", default=False, cast=bool)
+DEBUG = True
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
     "backendfreemarket.onrender.com",
     "freemarkett.netlify.app",
-
 ]
 
 # =========================
@@ -33,14 +32,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # Third Party
     "rest_framework",
     "corsheaders",
     "rest_framework_simplejwt",
     "cloudinary",
     "cloudinary_storage",
-
     # Local Apps
     "users",
 ]
@@ -52,10 +49,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-
     # WhiteNoise
     "whitenoise.middleware.WhiteNoiseMiddleware",
-
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -96,7 +91,7 @@ TEMPLATES = [
 # DATABASE
 # =========================
 
-DATABASES = {
+""" DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": config("DB_NAME"),
@@ -107,6 +102,16 @@ DATABASES = {
         "OPTIONS": {
             "sslmode": "require",
         },
+    }
+} """
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "tienda",
+        "USER": "postgres",
+        "PASSWORD": "13247291",
+        "HOST": "localhost",
+        "PORT": "5432",
     }
 }
 
@@ -149,9 +154,7 @@ STATIC_URL = "/static/"
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATICFILES_STORAGE = (
-    "whitenoise.storage.CompressedManifestStaticFilesStorage"
-)
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # =========================
 # MEDIA FILES
@@ -212,7 +215,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:4200",
     "https://freemarkett.netlify.app",
     "https://backendfreemarket.onrender.com",
-
 ]
 
 CSRF_TRUSTED_ORIGINS = [
