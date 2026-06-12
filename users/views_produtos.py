@@ -1,5 +1,6 @@
 # views.py
 from datetime import datetime
+import cloudinary
 import pytz
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -61,39 +62,110 @@ class ProductosViewSet(viewsets.ModelViewSet):
         }
         categoria_id = request.data.get("categoria")
         try:
-            data["categoria"] = Categorias.objects.get(id=categoria_id)
+            data["categoria"] = Categorias.objects.get(
+                id=categoria_id
+            )
         except Categorias.DoesNotExist:
             return Response(
                 {"error": "La categoría especificada no existe."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        # 🔥 QUITADO TODO LO DE imagen_productos
-        
+        # ===================================
+        # SUBIR IMAGEN
+        # ===================================
+        if "imagen_productos" in request.FILES:
+            try:
+                uploaded_image = cloudinary.uploader.upload(
+                    request.FILES["imagen_productos"],
+                    folder="productos"
+                )
+                data["imagen_productos"] = uploaded_image.get(
+                    "secure_url"
+                )
+                data["imagen_public_id"] = uploaded_image.get(
+                    "public_id"
+                )
+            except Exception as e:
+                return Response(
+                    {
+                        "error": f"Error al subir imagen: {str(e)}"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         producto = Productos.objects.create(**data)
         return Response(
-            ProductoSerializer(producto).data, status=status.HTTP_201_CREATED
+            ProductoSerializer(producto).data,
+            status=status.HTTP_201_CREATED,
         )
-
     def update(self, request, *args, **kwargs):
-        partial = True
         instance = self.get_object()
         data = request.data.copy()
-        
-        # 🔥 QUITADO TODO LO DE imagen_productos
-        # if "imagen_productos" in request.FILES: ← ELIMINADO
-
+        # ===================================
+        # ACTUALIZAR IMAGEN
+        # ===================================
+        if "imagen_productos" in request.FILES:
+            try:
+                # Eliminar imagen anterior
+                if instance.imagen_public_id:
+                    cloudinary.uploader.destroy(
+                        instance.imagen_public_id
+                    )
+                uploaded_image = cloudinary.uploader.upload(
+                    request.FILES["imagen_productos"],
+                    folder="productos"
+                )
+                data["imagen_productos"] = uploaded_image.get(
+                    "secure_url"
+                )
+                data["imagen_public_id"] = uploaded_image.get(
+                    "public_id"
+                )
+            except Exception as e:
+                return Response(
+                    {
+                        "error": f"Error al actualizar imagen: {str(e)}"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            data["imagen_productos"] = (
+                instance.imagen_productos
+            )
+            data["imagen_public_id"] = (
+                instance.imagen_public_id
+            )
+        # ===================================
+        # CATEGORIA
+        # ===================================
         categoria_data = request.data.get("categoria")
-        if isinstance(categoria_data, str):
-            categoria_data = json.loads(categoria_data)
+        if categoria_data:
+            try:
+                if isinstance(categoria_data, str):
+                    try:
+                        categoria_data = json.loads(categoria_data)
 
-        if isinstance(categoria_data, dict) and "id" in categoria_data:
-            instance.categoria_id = categoria_data["id"]
-        elif categoria_data:
-            instance.categoria_id = categoria_data
+                    except:
+                        pass
+                if (
+                    isinstance(categoria_data, dict)
+                    and "id" in categoria_data
+                ):
 
-        serializer = self.get_serializer(instance, data=data, partial=partial)
+                    data["categoria"] = categoria_data["id"]
+                else:
+                    data["categoria"] = categoria_data
+            except Exception:
+                return Response(
+                    {"error": "Categoría inválida"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        serializer = self.get_serializer(
+            instance,
+            data=data,
+            partial=True
+        )
         serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        serializer.save()
         return Response(serializer.data)
 
 class VentasViewSet(viewsets.ModelViewSet):

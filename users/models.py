@@ -93,7 +93,8 @@ class Productos(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
     codigo_producto = models.CharField(max_length=50, unique=True)
-    #imagen_productos = models.URLField(max_length=500, null=True, blank=True)
+    imagen_productos = models.URLField(max_length=500, null=True, blank=True)
+    imagen_public_id = models.CharField(max_length=255, null=True, blank=True)  
     estado_equipo = models.BooleanField(default=True)
 
     class Meta:
