@@ -141,41 +141,73 @@ class UsuariosViewSet(viewsets.ModelViewSet):
     serializer_class = UsuarioSerializer
 
     def create(self, request, *args, **kwargs):
-        # Extraer datos del request
-        data = {
-            "nombre_usuario": request.data.get("nombre_usuario"),
-            "apellido": request.data.get("apellido"),
-            "telefono": request.data.get("telefono"),
-            "correo": request.data.get("correo"),
-            "password": request.data.get("password"),
-            "ci": request.data.get("ci"),
-            "ci_departamento": request.data.get("ci_departamento"),
-            "fecha_nacimiento": request.data.get("fecha_nacimiento"),
-        }
-
-        # Subir la imagen a Cloudinary si se proporciona
+        data = request.data.copy()
         if "imagen_url" in request.FILES:
-            uploaded_image = cloudinary.uploader.upload(request.FILES["imagen_url"])
-            data["imagen_url"] = uploaded_image.get("url")
-            print("Uploaded Image URL:", data["imagen_url"])  # Debugging
-
-        # Crear el usuario
-        usuario = Usuarios.objects.create(**data)
-        return Response(UsuarioSerializer(usuario).data, status=status.HTTP_201_CREATED)
+            try:
+                uploaded_image = cloudinary.uploader.upload(
+                    request.FILES["imagen_url"],
+                    folder="usuarios"
+                )
+                data["imagen_url"] = uploaded_image.get(
+                    "secure_url"
+                )
+                data["imagen_public_id"] = uploaded_image.get(
+                    "public_id"
+                )
+            except Exception as e:
+                return Response(
+                    {
+                        "error": f"Error al subir imagen: {str(e)}"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        usuario = serializer.save()
+        return Response(
+            self.get_serializer(usuario).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     def update(self, request, *args, **kwargs):
-        partial = True  # Permite actualizaciones parciales
         instance = self.get_object()
-        data = request.data.copy()  # Copia los datos del request
-
-        # Si se proporciona una nueva imagen, subirla a Cloudinary
+        data = request.data.copy()
         if "imagen_url" in request.FILES:
-            uploaded_image = cloudinary.uploader.upload(request.FILES["imagen_url"])
-            data["imagen_url"] = uploaded_image.get("url")
+            try:
+                if instance.imagen_public_id:
+                    cloudinary.uploader.destroy(
+                        instance.imagen_public_id
+                    )
+                uploaded_image = cloudinary.uploader.upload(
+                    request.FILES["imagen_url"],
+                    folder="usuarios"
+                )
+                data["imagen_url"] = uploaded_image.get(
+                    "secure_url"
+                )
+                data["imagen_public_id"] = uploaded_image.get(
+                    "public_id"
+                )
+            except Exception as e:
+                return Response(
+                    {
+                        "error": f"Error al actualizar imagen: {str(e)}"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
 
-        serializer = self.get_serializer(instance, data=data, partial=partial)
+            data["imagen_url"] = instance.imagen_url
+            data["imagen_public_id"] = (
+                instance.imagen_public_id
+            )
+        serializer = self.get_serializer(
+            instance,
+            data=data,
+            partial=True,
+        )
         serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
+        serializer.save()
         return Response(serializer.data)
 
 

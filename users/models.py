@@ -35,6 +35,7 @@ class Usuarios(models.Model):
     estado_Usuario = models.BooleanField(default=True)
 
     imagen_url = models.URLField(max_length=500, null=True, blank=True)
+    imagen_public_id = models.CharField(max_length=255, null=True, blank=True)  
 
     def save(self, *args, **kwargs):
         if not self.password.startswith("pbkdf2"):
@@ -108,7 +109,7 @@ class Productos(models.Model):
 class Ventas(models.Model):
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
     fecha_venta = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, default="Pendiente") 
+    estado = models.CharField(max_length=20, default="Completada") 
     total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
 
     def __str__(self):
