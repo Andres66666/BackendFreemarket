@@ -1,16 +1,7 @@
 # models.py
 from decimal import Decimal
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password
-
-# models.py
-from cloudinary.models import CloudinaryField
-from django.core.exceptions import ValidationError
-
-from datetime import datetime
-from django.utils import timezone
-
 
 # Modelo de Roles
 class Roles(models.Model):
@@ -20,7 +11,6 @@ class Roles(models.Model):
     def __str__(self):
         return self.nombre_rol
 
-
 # Modelo de Permisos
 class Permisos(models.Model):
     nombre_permiso = models.CharField(max_length=50, unique=True)
@@ -29,7 +19,6 @@ class Permisos(models.Model):
 
     def __str__(self):
         return self.nombre_permiso
-
 
 # Modelo de Usuarios
 class Usuarios(models.Model):
@@ -55,7 +44,6 @@ class Usuarios(models.Model):
     def __str__(self):
         return f"{self.nombre_usuario} {self.apellido}"
 
-
 # Modelo de Roles de Usuarios
 class UsuariosRoles(models.Model):
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
@@ -66,7 +54,6 @@ class UsuariosRoles(models.Model):
 
     def __str__(self):
         return f"{self.usuario} {self.rol} "
-
 
 # Modelo de Roles y Permisos
 class RolesPermisos(models.Model):
@@ -121,12 +108,8 @@ class Productos(models.Model):
 class Ventas(models.Model):
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
     fecha_venta = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(
-        max_length=20, default="Pendiente"
-    )  # Example: default string value
-    total = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
-    )  # Example: decimal default
+    estado = models.CharField(max_length=20, default="Pendiente") 
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
 
     def __str__(self):
         return f"Venta #{self.id} realizada por {self.usuario}"
@@ -138,21 +121,17 @@ class DetallesVentas(models.Model):
     producto = models.ForeignKey(Productos, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField()
     precio = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal = models.DecimalField(
-        max_digits=10, decimal_places=2, default=Decimal("0.00")
-    )  # Example: decimal default
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     tipo_venta = models.CharField(max_length=10)
 
     def save(self, *args, **kwargs):
-        # Verificar si hay suficiente stock antes de confirmar la venta
         if self.cantidad > self.producto.stock:
             raise ValueError(
                 f"No hay suficiente stock para {self.producto.nombre_producto}"
             )
-        # Reducir el stock del producto
         self.producto.stock -= self.cantidad
-        self.producto.save()  # Guardar el cambio en el modelo de Productos
-        super().save(*args, **kwargs)  # Llamar al método save de la superclase
+        self.producto.save()  
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Detalle de {self.cantidad} {self.producto.nombre_producto} en la venta {self.venta.id}"

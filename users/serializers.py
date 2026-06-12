@@ -18,11 +18,10 @@ class LoginSerializer(serializers.Serializer):
     correo = serializers.EmailField(max_length=100, required=False, allow_null=True)
     password = serializers.CharField(max_length=255, required=True)
 
-
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuarios
-        fields = "__all__"
+        exclude = ["password"]
 
 
 class RolSerializer(serializers.ModelSerializer):

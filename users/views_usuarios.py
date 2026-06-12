@@ -31,13 +31,11 @@ from .serializers import (
 
 # backend
 class LoginView(APIView):
-    authentication_classes = []  # Elimina autenticación solo para login
-    permission_classes = []  # Deja vacía la lista de permisos
+    authentication_classes = []
+    permission_classes = []
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
-
-        # Validación del formulario de login
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -45,75 +43,55 @@ class LoginView(APIView):
         password = serializer.validated_data.get("password")
 
         try:
-            usuario = Usuarios.objects.prefetch_related(
-                Prefetch(
-                    "usuariosroles_set",
-                    queryset=UsuariosRoles.objects.select_related("rol"),
-                ),
-                Prefetch(
-                    "usuariosroles_set__rol__rolespermisos_set",
-                    queryset=RolesPermisos.objects.select_related("permiso"),
-                ),
-            ).get(correo=correo)
-
-            # Verificación de estado del usuario
-            if not usuario.estado_Usuario:
-                return Response(
-                    {
-                        "error": "No puedes iniciar sesión!!!. Comuníquese con el administrador. Gracias."
-                    },
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-            # Verificar la contraseña
-            if not check_password(password, usuario.password):
-                return Response(
-                    {"error": "Credenciales incorrectas"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Generación del token JWT
-            refresh = RefreshToken.for_user(usuario)
-            access_token = str(refresh.access_token)
-
-            # Obtener roles y permisos
-            roles = [
-                usuario_rol.rol.nombre_rol
-                for usuario_rol in usuario.usuariosroles_set.all()
-            ]
-            permisos = []
-            for usuario_rol in usuario.usuariosroles_set.all():
-                permisos += [
-                    rol_permiso.permiso.nombre_permiso
-                    for rol_permiso in usuario_rol.rol.rolespermisos_set.all()
-                ]
-
-            # Verificar si el usuario tiene roles y permisos
-            if not roles or not permisos:
-                return Response(
-                    {"error": "El usuario no tiene roles ni permisos asignados."},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-
-            # Respuesta de éxito
-            return Response(
-                {
-                    "access_token": access_token,
-                    "roles": roles,
-                    "permisos": permisos,
-                    "nombre_usuario": usuario.nombre_usuario,  # Agregar nombre de usuario
-                    "apellido": usuario.apellido,  # Agregar apellido
-                    "imagen_url": usuario.imagen_url,  # Agregar URL de la imagen
-                    "usuario_id": usuario.id,
-                },
-                status=status.HTTP_200_OK,
-            )
-
+            usuario = Usuarios.objects.get(correo=correo)
         except Usuarios.DoesNotExist:
             return Response(
                 {"error": "Usuario no encontrado"}, status=status.HTTP_404_NOT_FOUND
             )
 
+        if not usuario.estado_Usuario:
+            return Response(
+                {"error": "No puedes iniciar sesión!!!. Comuníquese con el administrador. Gracias."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if not check_password(password, usuario.password):
+            return Response(
+                {"error": "Credenciales incorrectas"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        refresh = RefreshToken.for_user(usuario)
+        access_token = str(refresh.access_token)
+
+        # Una sola query con JOIN, en vez de prefetch anidado
+        roles_permisos = (
+            RolesPermisos.objects
+            .filter(rol__usuariosroles__usuario=usuario)
+            .select_related("rol", "permiso")
+        )
+
+        roles = list({rp.rol.nombre_rol for rp in roles_permisos})
+        permisos = list({rp.permiso.nombre_permiso for rp in roles_permisos})
+
+        if not roles or not permisos:
+            return Response(
+                {"error": "El usuario no tiene roles ni permisos asignados."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return Response(
+            {
+                "access_token": access_token,
+                "roles": roles,
+                "permisos": permisos,
+                "nombre_usuario": usuario.nombre_usuario,
+                "apellido": usuario.apellido,
+                "imagen_url": usuario.imagen_url,
+                "usuario_id": usuario.id,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 # ViewSet for Permisos
 class PermisosViewSet(viewsets.ModelViewSet):

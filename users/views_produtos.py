@@ -1,13 +1,10 @@
 # views.py
 from datetime import datetime
 import pytz
-from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 import json
-from cloudinary.uploader import upload
-import cloudinary.uploader
 
 from .models import (
     Categorias,
@@ -24,7 +21,6 @@ from .serializers import (
     ProductoSerializer,
     VentaSerializer,
 )
-from django.shortcuts import get_object_or_404
 
 """ seccion para las ventas  """
 
@@ -49,9 +45,8 @@ class CategoriasViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)  # Actualiza la categoría
         return Response(serializer.data)
 
-
 class ProductosViewSet(viewsets.ModelViewSet):
-    queryset = Productos.objects.all()
+    queryset = Productos.objects.select_related("categoria").all()
     serializer_class = ProductoSerializer
 
     def create(self, request, *args, **kwargs):
@@ -100,9 +95,9 @@ class ProductosViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         return Response(serializer.data)
-    
+
 class VentasViewSet(viewsets.ModelViewSet):
-    queryset = Ventas.objects.all()
+    queryset = Ventas.objects.select_related("usuario").all()
     serializer_class = VentaSerializer
 
     def create(self, request, *args, **kwargs):
@@ -137,7 +132,7 @@ class VentasViewSet(viewsets.ModelViewSet):
         return Response(VentaSerializer(venta).data, status=status.HTTP_201_CREATED)
         
 class DetallesVentasViewSet(viewsets.ModelViewSet):
-    queryset = DetallesVentas.objects.all()
+    queryset = DetallesVentas.objects.select_related("producto__categoria", "venta__usuario").all()
     serializer_class = DetallesVentasSerializer
 
     def create(self, request, *args, **kwargs):

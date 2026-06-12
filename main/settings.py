@@ -10,7 +10,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY
 # =========================
 
-SECRET_KEY = config("SECRET_KEY")
 SECRET_KEY = "django-insecure-kw5d5g509&zw(cn14nwvrwa$-$uh&)i9j^w#hajmu_wi1udj5m"
 DEBUG = True
 
@@ -91,19 +90,6 @@ TEMPLATES = [
 # DATABASE
 # =========================
 
-""" DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME"),
-        "USER": config("DB_USER"),
-        "PASSWORD": config("DB_PASSWORD"),
-        "HOST": config("DB_HOST"),
-        "PORT": config("DB_PORT"),
-        "OPTIONS": {
-            "sslmode": "require",
-        },
-    }
-} """
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -117,7 +103,7 @@ DATABASES = {
 """ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "tienda",
+        "NAME": "Freemarket",
         "USER": "postgres",
         "PASSWORD": "13247291",
         "HOST": "localhost",
@@ -130,65 +116,45 @@ DATABASES = {
 # =========================
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
 ]
 
 # =========================
 # INTERNATIONALIZATION
 # =========================
-
 LANGUAGE_CODE = "es-es"
-
 TIME_ZONE = "America/Lima"
-
 USE_I18N = True
-
 USE_TZ = True
-
 # =========================
 # STATIC FILES
 # =========================
-
 STATIC_URL = "/static/"
-
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 # =========================
 # MEDIA FILES
 # =========================
-
 MEDIA_URL = "/media/"
-
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
 # =========================
 # CLOUDINARY
 # =========================
 
 CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME"),
-    "API_KEY": config("CLOUDINARY_API_KEY"),
-    "API_SECRET": config("CLOUDINARY_API_SECRET"),
+    "CLOUD_NAME": "dz45dhxii",
+    "API_KEY": "419624749789857",
+    "API_SECRET": "lOJH1C6pH2HT9IaeMn89fhVF3Vk",
     "SECURE": True,
 }
 
 cloudinary.config(
-    cloud_name=config("CLOUDINARY_CLOUD_NAME"),
-    api_key=config("CLOUDINARY_API_KEY"),
-    api_secret=config("CLOUDINARY_API_SECRET"),
+    cloud_name="dz45dhxii",
+    api_key="419624749789857",
+    api_secret="lOJH1C6pH2HT9IaeMn89fhVF3Vk",
 )
 
 # =========================
@@ -240,17 +206,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
-
     SESSION_COOKIE_SECURE = True
-
     CSRF_COOKIE_SECURE = True
-
     SECURE_HSTS_SECONDS = 31536000
-
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-
     SECURE_HSTS_PRELOAD = True
-
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # =========================

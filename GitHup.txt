@@ -14,12 +14,12 @@ git config --global user.email "freemarket0620@gmail.com"
 git init
 git status
 git add .
-git commit -m "Cambio 5-15-2026 Final"
+git commit -m "Cambio 12-06-2026 R1"
 git remote add origin https://github.com/freemarket0620-art/FrontendFreemarket.git
 git push -u origin main
 
  
-
+git remote add origin https://github.com/freemarket0620-art/FrontendFreemarket.git
 
 
 
@@ -29,9 +29,9 @@ git config --global user.email "freemarket0620@gmail.com"
 git init
 git status
 git add .
-git commit -m "Cambio 5-15-2026 Final"
+git commit -m "Cambio 5-15-2026 R1"
 git remote add origin https://github.com/freemarket0620-art/BackendFreemarket.git
-git push -u origin Produccion
+git push -u origin main
 
 
-
+git remote add origin https://github.com/freemarket0620-art/BackendFreemarket.git
