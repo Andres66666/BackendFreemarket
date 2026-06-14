@@ -2,9 +2,9 @@
 from datetime import datetime
 import cloudinary
 import pytz
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
 import json
 
 from .models import (
@@ -12,6 +12,7 @@ from .models import (
     DetallesVentas,
     Efectivo,
     Productos,
+    Sucursales,
     Usuarios,
     Ventas,
 )
@@ -27,7 +28,7 @@ from .serializers import (
 
 
 class CategoriasViewSet(viewsets.ModelViewSet):
-    queryset = Categorias.objects.all()
+    queryset = Categorias.objects.filter(estado_categoria=True).order_by("nombre_categoria")
     serializer_class = CategoriaSerializer
 
     def create(self, request, *args, **kwargs):
@@ -47,10 +48,27 @@ class CategoriasViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 class ProductosViewSet(viewsets.ModelViewSet):
-    queryset = Productos.objects.select_related("categoria").all()
+    queryset = (
+        Productos.objects.select_related("categoria", "sucursal")
+        .filter(estado_equipo=True)
+        .order_by("nombre_producto")
+    )
     serializer_class = ProductoSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        sucursal_id = self.request.query_params.get("sucursal_id")
+        if sucursal_id:
+            return queryset.filter(sucursal_id=sucursal_id)
+
+        return queryset
+
+    # =====================================
+    # CREAR PRODUCTO
+    # =====================================
     def create(self, request, *args, **kwargs):
+
         data = {
             "nombre_producto": request.data.get("nombre_producto"),
             "descripcion": request.data.get("descripcion"),
@@ -60,6 +78,10 @@ class ProductosViewSet(viewsets.ModelViewSet):
             "stock": request.data.get("stock"),
             "codigo_producto": request.data.get("codigo_producto"),
         }
+
+        # ==========================
+        # CATEGORIA
+        # ==========================
         categoria_id = request.data.get("categoria")
         try:
             data["categoria"] = Categorias.objects.get(
@@ -67,63 +89,123 @@ class ProductosViewSet(viewsets.ModelViewSet):
             )
         except Categorias.DoesNotExist:
             return Response(
-                {"error": "La categoría especificada no existe."},
+                {
+                    "error": (
+                        "La categoría especificada "
+                        "no existe."
+                    )
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        # ===================================
-        # SUBIR IMAGEN
-        # ===================================
+        # ==========================
+        # SUCURSAL
+        # ==========================
+        sucursal_id = request.data.get("sucursal_id")
+        if sucursal_id:
+            try:
+                data["sucursal"] = (
+                    Sucursales.objects.get(
+                        id=sucursal_id
+                    )
+                )
+            except Sucursales.DoesNotExist:
+                return Response(
+                    {
+                        "error": (
+                            "La sucursal especificada "
+                            "no existe."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        # ==========================
+        # IMAGEN
+        # ==========================
         if "imagen_productos" in request.FILES:
             try:
-                uploaded_image = cloudinary.uploader.upload(
-                    request.FILES["imagen_productos"],
-                    folder="productos"
+                uploaded_image = (
+                    cloudinary.uploader.upload(
+                        request.FILES[
+                            "imagen_productos"
+                        ],
+                        folder="productos",
+                    )
                 )
-                data["imagen_productos"] = uploaded_image.get(
-                    "secure_url"
+                data["imagen_productos"] = (
+                    uploaded_image.get(
+                        "secure_url"
+                    )
                 )
-                data["imagen_public_id"] = uploaded_image.get(
-                    "public_id"
+                data["imagen_public_id"] = (
+                    uploaded_image.get(
+                        "public_id"
+                    )
                 )
             except Exception as e:
                 return Response(
                     {
-                        "error": f"Error al subir imagen: {str(e)}"
+                        "error": (
+                            f"Error al subir imagen: "
+                            f"{str(e)}"
+                        )
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        producto = Productos.objects.create(**data)
-        return Response(
-            ProductoSerializer(producto).data,
-            status=status.HTTP_201_CREATED,
-        )
+        try:
+            producto = Productos.objects.create(**data)
+
+            return Response(
+                ProductoSerializer(producto).data,
+                status=status.HTTP_201_CREATED,
+            )
+
+        except Exception as e:
+            print("ERROR PRODUCTO:", str(e))
+
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    # =====================================
+    # EDITAR PRODUCTO
+    # =====================================
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data.copy()
-        # ===================================
-        # ACTUALIZAR IMAGEN
-        # ===================================
+        # ==========================
+        # IMAGEN
+        # ==========================
         if "imagen_productos" in request.FILES:
             try:
-                # Eliminar imagen anterior
                 if instance.imagen_public_id:
                     cloudinary.uploader.destroy(
                         instance.imagen_public_id
                     )
-                uploaded_image = cloudinary.uploader.upload(
-                    request.FILES["imagen_productos"],
-                    folder="productos"
+                uploaded_image = (
+                    cloudinary.uploader.upload(
+                        request.FILES[
+                            "imagen_productos"
+                        ],
+                        folder="productos",
+                    )
                 )
-                data["imagen_productos"] = uploaded_image.get(
-                    "secure_url"
+                data["imagen_productos"] = (
+                    uploaded_image.get(
+                        "secure_url"
+                    )
                 )
-                data["imagen_public_id"] = uploaded_image.get(
-                    "public_id"
+                data["imagen_public_id"] = (
+                    uploaded_image.get(
+                        "public_id"
+                    )
                 )
             except Exception as e:
                 return Response(
                     {
-                        "error": f"Error al actualizar imagen: {str(e)}"
+                        "error": (
+                            f"Error al actualizar "
+                            f"imagen: {str(e)}"
+                        )
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
@@ -134,42 +216,71 @@ class ProductosViewSet(viewsets.ModelViewSet):
             data["imagen_public_id"] = (
                 instance.imagen_public_id
             )
-        # ===================================
+        # ==========================
         # CATEGORIA
-        # ===================================
-        categoria_data = request.data.get("categoria")
+        # ==========================
+        categoria_data = request.data.get(
+            "categoria"
+        )
         if categoria_data:
             try:
-                if isinstance(categoria_data, str):
+                if isinstance(
+                    categoria_data,
+                    str
+                ):
                     try:
-                        categoria_data = json.loads(categoria_data)
-
+                        categoria_data = json.loads(
+                            categoria_data
+                        )
                     except:
                         pass
-                if (
-                    isinstance(categoria_data, dict)
-                    and "id" in categoria_data
+                if (isinstance(categoria_data, dict)
+                    and "id"
+                    in categoria_data
                 ):
-
-                    data["categoria"] = categoria_data["id"]
+                    data["categoria"] = (
+                        categoria_data["id"]
+                    )
                 else:
-                    data["categoria"] = categoria_data
+                    data["categoria"] = (
+                        categoria_data
+                    )
             except Exception:
                 return Response(
-                    {"error": "Categoría inválida"},
+                    {
+                        "error":
+                        "Categoría inválida"
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        serializer = self.get_serializer(
-            instance,
-            data=data,
-            partial=True
+        # ==========================
+        # SUCURSAL
+        # ==========================
+        sucursal_id = request.data.get(
+            "sucursal_id"
         )
+        if sucursal_id:
+            try:
+                Sucursales.objects.get(
+                    id=sucursal_id
+                )
+                data["sucursal"] = (sucursal_id)
+            except Sucursales.DoesNotExist:
+                return Response(
+                    {"error":"Sucursal inválida"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        # ==========================
+        # GUARDAR
+        # ==========================
+        serializer = self.get_serializer(instance,data=data,partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
+
 class VentasViewSet(viewsets.ModelViewSet):
-    queryset = Ventas.objects.select_related("usuario").all()
+    queryset = Ventas.objects.select_related("usuario", "sucursal").all().order_by("-id")
     serializer_class = VentaSerializer
 
     def create(self, request, *args, **kwargs):
@@ -178,49 +289,83 @@ class VentasViewSet(viewsets.ModelViewSet):
         if isinstance(usuario_data, dict) and "id" in usuario_data:
             usuario_id = usuario_data["id"]
         else:
-            usuario_id = usuario_data  # Asumir que es un ID
+            usuario_id = usuario_data
 
         try:
-            usuario = Usuarios.objects.get(id=usuario_id)
+            usuario = Usuarios.objects.select_related(
+                "sucursal"
+            ).get(id=usuario_id)
+
         except Usuarios.DoesNotExist:
             return Response(
                 {"error": "El usuario especificado no existe."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        local_tz = pytz.timezone("America/La_Paz")  # Zona horaria de Bolivia
-        fecha_venta = datetime.now(local_tz)  # Obtener la hora local directamente
+        local_tz = pytz.timezone("America/La_Paz")
+        fecha_venta = datetime.now(local_tz)
 
         data = {
             "usuario": usuario,
-            "estado": request.data.get("estado", "Pendiente"),
+            "sucursal": usuario.sucursal,  # ← NUEVO
+            "estado": request.data.get(
+                "estado",
+                "Completada"
+            ),
             "total": request.data.get(
-                "total", 0.00
-            ),  # Asegúrate de que el total tenga un valor por defecto
-            "fecha_venta": fecha_venta,  # Este campo se manejará automáticamente en el modelo
+                "total",
+                0.00
+            ),
+            "fecha_venta": fecha_venta,
         }
+
         venta = Ventas.objects.create(**data)
 
-        return Response(VentaSerializer(venta).data, status=status.HTTP_201_CREATED)
-        
+        return Response(
+            VentaSerializer(venta).data,
+            status=status.HTTP_201_CREATED
+        )
+
+
+@api_view(["GET"])
+def productos_por_sucursal(request, sucursal_id=None):
+    sucursal_id = sucursal_id or request.query_params.get("sucursal_id")
+    if not sucursal_id:
+        return Response(
+            {"error": "Se requiere el identificador de la sucursal."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    productos = (
+        Productos.objects.select_related("categoria", "sucursal")
+        .filter(sucursal_id=sucursal_id, estado_equipo=True)
+        .order_by("nombre_producto")
+    )
+    serializer = ProductoSerializer(productos, many=True)
+    return Response(serializer.data)
+
 class DetallesVentasViewSet(viewsets.ModelViewSet):
-    queryset = DetallesVentas.objects.select_related("producto__categoria", "venta__usuario").all()
+    queryset = (
+        DetallesVentas.objects.select_related(
+            "producto__categoria",
+            "producto__sucursal",
+            "venta__usuario",
+            "venta__sucursal",
+        )
+        .all()
+        .order_by("-id")
+    )
     serializer_class = DetallesVentasSerializer
 
     def create(self, request, *args, **kwargs):
-        print("🔥 DATOS RECIBIDOS:", request.data)
-        
         data = request.data.copy()
-        print("🔄 DATOS FINALES:", data)
-        
         serializer = self.get_serializer(data=data)
+
         if serializer.is_valid():
-            detalle = serializer.save()
-            print("✅ CREADO!")
-            return Response(serializer.data, status=201)
-        
-        print("❌ ERRORES:", serializer.errors)
-        return Response(serializer.errors, status=400)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 

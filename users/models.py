@@ -19,7 +19,14 @@ class Permisos(models.Model):
 
     def __str__(self):
         return self.nombre_permiso
+class Sucursales(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    direccion = models.TextField(blank=True, null=True)
+    telefono = models.CharField(max_length=30, blank=True, null=True)
+    estado = models.BooleanField(default=True)
 
+    def __str__(self):
+        return self.nombre
 # Modelo de Usuarios
 class Usuarios(models.Model):
     nombre_usuario = models.CharField(max_length=50)
@@ -36,6 +43,7 @@ class Usuarios(models.Model):
 
     imagen_url = models.URLField(max_length=500, null=True, blank=True)
     imagen_public_id = models.CharField(max_length=255, null=True, blank=True)  
+    sucursal = models.ForeignKey( Sucursales, on_delete=models.CASCADE, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if not self.password.startswith("pbkdf2"):
@@ -92,12 +100,18 @@ class Productos(models.Model):
     categoria = models.ForeignKey(Categorias, on_delete=models.CASCADE)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
-    codigo_producto = models.CharField(max_length=50, unique=True)
+    codigo_producto = models.CharField(max_length=50,)
     imagen_productos = models.URLField(max_length=500, null=True, blank=True)
     imagen_public_id = models.CharField(max_length=255, null=True, blank=True)  
     estado_equipo = models.BooleanField(default=True)
+    
+    sucursal = models.ForeignKey(Sucursales, on_delete=models.PROTECT, null=True,blank=True)
 
     class Meta:
+        unique_together = (
+            "codigo_producto",
+            "sucursal"
+        )
         verbose_name = "Producto"
         verbose_name_plural = "Productos"
         ordering = ["nombre_producto"]
@@ -109,6 +123,7 @@ class Productos(models.Model):
 # Modelo de Ventas
 class Ventas(models.Model):
     usuario = models.ForeignKey(Usuarios, on_delete=models.CASCADE)
+    sucursal = models.ForeignKey(Sucursales,on_delete=models.PROTECT, null=True, blank=True)
     fecha_venta = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=20, default="Completada") 
     total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))

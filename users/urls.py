@@ -22,7 +22,9 @@ router.register(r"detallesventas", views_produtos.DetallesVentasViewSet)
 # rutas de nuevas tablas
 router.register(r"efectivo", views_produtos.EfectivoViewSet)
 
+router.register(r"sucursales", views_usuarios.SucursalesViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path("login/", views_usuarios.LoginView.as_view(), name="login"),
+    path('productos/sucursal/<int:sucursal_id>/',views_produtos.productos_por_sucursal),
 ]

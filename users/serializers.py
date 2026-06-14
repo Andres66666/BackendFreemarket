@@ -5,6 +5,7 @@ from .models import (
     DetallesVentas,
     Efectivo,
     Productos,
+    Sucursales,
     Usuarios,
     Roles,
     Permisos,
@@ -18,7 +19,19 @@ class LoginSerializer(serializers.Serializer):
     correo = serializers.EmailField(max_length=100, required=False, allow_null=True)
     password = serializers.CharField(max_length=255, required=True)
 
+class SucursalesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sucursales
+        fields = "__all__"
+
 class UsuarioSerializer(serializers.ModelSerializer):
+    sucursal = SucursalesSerializer(read_only=True)
+    sucursal_id = serializers.PrimaryKeyRelatedField(
+            queryset=Sucursales.objects.all(),
+            source="sucursal",
+            write_only=True,
+            required=False
+        )
     class Meta:
         model = Usuarios
         exclude = ["password"]
@@ -35,10 +48,10 @@ class PermisosSerializer(serializers.ModelSerializer):
         model = Permisos
         fields = "__all__"
 
-
 class UsuariosRolesSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)
     rol = RolSerializer(read_only=True)
+    
 
     class Meta:
         model = UsuariosRoles
@@ -66,7 +79,13 @@ class CategoriaSerializer(serializers.ModelSerializer):
 
 class ProductoSerializer(serializers.ModelSerializer):
     categoria = CategoriaSerializer(read_only=True)
-
+    sucursal = SucursalesSerializer(read_only=True)
+    sucursal_id = serializers.PrimaryKeyRelatedField(
+            queryset=Sucursales.objects.all(),
+            source="sucursal",
+            write_only=True,
+            required=False
+        )
     class Meta:
         model = Productos
         fields = "__all__"
@@ -74,6 +93,7 @@ class ProductoSerializer(serializers.ModelSerializer):
 
 class VentaSerializer(serializers.ModelSerializer):
     usuario = UsuarioSerializer(read_only=True)
+    sucursal = SucursalesSerializer(read_only=True)
 
     class Meta:
         model = Ventas
