@@ -18,9 +18,11 @@ from .models import (
 )
 from .serializers import (
     CategoriaSerializer,
+    DetalleVentaListSerializer,
     DetallesVentasSerializer,
     EfectivoSerializer,
     ProductoSerializer,
+    VentaListSerializer,
     VentaSerializer,
 )
 
@@ -344,6 +346,38 @@ def productos_por_sucursal(request, sucursal_id=None):
     serializer = ProductoSerializer(productos, many=True)
     return Response(serializer.data)
 
+
+# views.py
+
+
+
+@api_view(['GET'])
+def ventas_por_sucursal(request, sucursal_id):
+
+    ventas = (
+        Ventas.objects
+        .select_related('usuario', 'sucursal')
+        .only(
+            'id',
+            'usuario_id',
+            'sucursal_id',
+            'fecha_venta',
+            'estado',
+            'total',
+            'usuario__nombre_usuario',
+            'usuario__apellido',
+            'sucursal__nombre',
+        )
+        .filter(sucursal_id=sucursal_id)
+        .order_by('-fecha_venta')
+    )
+
+    serializer = VentaListSerializer(ventas, many=True)
+
+    return Response(serializer.data)
+
+
+
 class DetallesVentasViewSet(viewsets.ModelViewSet):
     queryset = (
         DetallesVentas.objects.select_related(
@@ -367,6 +401,42 @@ class DetallesVentasViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+@api_view(["GET"])
+def detalles_ventas_por_sucursal(request, sucursal_id):
+    detalles = (
+        DetallesVentas.objects.select_related(
+            "producto__categoria",
+            "venta__usuario",
+        )
+        .only(
+            "id",
+            "cantidad",
+            "precio",
+            "subtotal",
+            "tipo_venta",
+            "producto_id",
+            "producto__nombre_producto",
+            "producto__codigo_producto",
+            "producto__categoria_id",
+            "producto__precio_compra",
+            "producto__precio_unitario",
+            "producto__precio_mayor",
+            "venta_id",
+            "venta__fecha_venta",
+            "venta__estado",
+            "venta__usuario_id",
+            "venta__usuario__nombre_usuario",
+            "venta__usuario__apellido",
+            "venta__usuario__ci",
+        )
+        .filter(venta__sucursal_id=sucursal_id)
+        .order_by("-venta__fecha_venta", "-id")
+    )
+
+    serializer = DetalleVentaListSerializer(detalles, many=True)
+    return Response(serializer.data)
 
 
 class EfectivoViewSet(viewsets.ModelViewSet):

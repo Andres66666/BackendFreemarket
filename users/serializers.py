@@ -100,6 +100,28 @@ class VentaSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class VentaListSerializer(serializers.ModelSerializer):
+    usuario = serializers.SerializerMethodField()
+    sucursal = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Ventas
+        fields = ["id", "usuario", "sucursal", "fecha_venta", "estado", "total"]
+
+    def get_usuario(self, obj):
+        return {
+            "id": obj.usuario_id,
+            "nombre_usuario": obj.usuario.nombre_usuario,
+            "apellido": obj.usuario.apellido,
+        }
+
+    def get_sucursal(self, obj):
+        return {
+            "id": obj.sucursal_id,
+            "nombre": obj.sucursal.nombre if obj.sucursal else None,
+        }
+
+
 class DetallesVentasSerializer(serializers.ModelSerializer):
     producto_id = serializers.PrimaryKeyRelatedField(
         queryset=Productos.objects.all(),
@@ -116,6 +138,46 @@ class DetallesVentasSerializer(serializers.ModelSerializer):
     class Meta:
         model = DetallesVentas
         fields = "__all__"
+
+
+class DetalleVentaListSerializer(serializers.ModelSerializer):
+    producto = serializers.SerializerMethodField()
+    venta = serializers.SerializerMethodField()
+
+    class Meta:
+        model = DetallesVentas
+        fields = ["id", "producto", "venta", "cantidad", "precio", "subtotal", "tipo_venta"]
+
+    def get_producto(self, obj):
+        categoria = None
+        if obj.producto.categoria_id:
+            categoria = {
+                "id": obj.producto.categoria_id,
+                "nombre_categoria": obj.producto.categoria.nombre_categoria,
+            }
+
+        return {
+            "id": obj.producto_id,
+            "nombre_producto": obj.producto.nombre_producto,
+            "codigo_producto": obj.producto.codigo_producto,
+            "categoria": categoria,
+            "precio_compra": obj.producto.precio_compra,
+            "precio_unitario": obj.producto.precio_unitario,
+            "precio_mayor": obj.producto.precio_mayor,
+        }
+
+    def get_venta(self, obj):
+        return {
+            "id": obj.venta_id,
+            "fecha_venta": obj.venta.fecha_venta,
+            "estado": obj.venta.estado,
+            "usuario": {
+                "id": obj.venta.usuario_id,
+                "nombre_usuario": obj.venta.usuario.nombre_usuario,
+                "apellido": obj.venta.usuario.apellido,
+                "ci": obj.venta.usuario.ci,
+            },
+        }
 
 class EfectivoSerializer(serializers.ModelSerializer):
     class Meta:

@@ -26,5 +26,15 @@ router.register(r"sucursales", views_usuarios.SucursalesViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path("login/", views_usuarios.LoginView.as_view(), name="login"),
-    path('productos/sucursal/<int:sucursal_id>/',views_produtos.productos_por_sucursal),
+    path('productos/sucursal/<int:sucursal_id>/', views_produtos.productos_por_sucursal, name='productos-por-sucursal'),
+    path(
+        'ventas/sucursal/<int:sucursal_id>/',
+        views_produtos.ventas_por_sucursal,
+        name='ventas-por-sucursal',
+    ),
+    path(
+        'detallesventas/sucursal/<int:sucursal_id>/',
+        views_produtos.detalles_ventas_por_sucursal,
+        name='detalles-ventas-por-sucursal',
+    ),
 ]
