@@ -28,5 +28,5 @@ git push -u origin main
 
 
 git remote remove origin
-git remote add origin https://github.com/freemarket0620-art/FrontendFreemarket.git
+git remote add origin https://github.com/freemarket0620-art/BackendFreemarket.git
 git remote -v
