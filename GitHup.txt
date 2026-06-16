@@ -26,7 +26,6 @@ git commit -m "Cambio 6-12-2026 R3"
 git remote add origin https://github.com/Andres66666/BackendFreemarket.git
 git push -u origin main
 
-https://github.com/Andres66666/BackendFreemarket.git
 
 
 git remote remove origin
