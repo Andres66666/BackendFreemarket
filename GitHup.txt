@@ -1,20 +1,12 @@
+git config --global user.name "Andrés66666"
+git config --global user.email "cya2024773@est.univalle.edu"
 
-
-git config --global user.name "freemarket0620"
-git config --global user.email "freemarket0620@gmail.com"
-Username for 'https://github.com': freemarket0620
-Password for 'https://github.com': yucumo12345*
-
-
-
-git config --global user.name "freemarket0620-art"
-git config --global user.email "freemarket0620@gmail.com"
 
 
 git init
 git status
 git add .
-git commit -m "Cambio 12-06-2026 R4"
+git commit -m "Cambio 12-06-2026 nuevos cambios reales"
 git remote add origin https://github.com/Andres66666/FrontendFreemarket.git
 git push -u origin main
 
@@ -22,7 +14,7 @@ git push -u origin main
 git init
 git status
 git add .
-git commit -m "Cambio 6-12-2026 R44"
+git commit -m "Cambio 12-06-2026 nuevos cambios reales"
 git remote add origin https://github.com/Andres66666/BackendFreemarket.git
 git push -u origin main
 
