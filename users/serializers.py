@@ -2,9 +2,13 @@
 from rest_framework import serializers
 from .models import (
     Categorias,
+    Clientes,
+    Creditos,
     DetallesVentas,
     Efectivo,
+    PagosCredito,
     Productos,
+    RecibosCredito,
     Sucursales,
     Usuarios,
     Roles,
@@ -184,4 +188,80 @@ class EfectivoSerializer(serializers.ModelSerializer):
         model = Efectivo
         fields = "__all__"
 
+
+
+
+""" nueva seccion de celulares a creditos  """
+class ClienteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Clientes
+        fields = "__all__"
+
+class CreditoSerializer(serializers.ModelSerializer):
+
+    cliente = ClienteSerializer(read_only=True)
+    producto = ProductoSerializer(read_only=True)
+    usuario = UsuarioSerializer(read_only=True)
+
+    cliente_id = serializers.PrimaryKeyRelatedField(
+        queryset=Clientes.objects.all(),
+        source="cliente",
+        write_only=True
+    )
+
+    producto_id = serializers.PrimaryKeyRelatedField(
+        queryset=Productos.objects.all(),
+        source="producto",
+        write_only=True
+    )
+
+    usuario_id = serializers.PrimaryKeyRelatedField(
+        queryset=Usuarios.objects.all(),
+        source="usuario",
+        write_only=True
+    )
+
+    class Meta:
+        model = Creditos
+        fields = "__all__"
+
+        read_only_fields = (
+            "precio_total",
+            "cuota_mensual",
+            "saldo_pendiente",
+            "estado",
+            "fecha_credito",
+            "cuotas_pagadas",
+            "stock_descontado",
+        )
+
+class PagoCreditoSerializer(serializers.ModelSerializer):
+    credito = CreditoSerializer(read_only=True)
+    credito_id = serializers.PrimaryKeyRelatedField( queryset=Creditos.objects.all(), source="credito", write_only=True )
+
+    class Meta:
+        model = PagosCredito
+        fields = "__all__"
+
+class ReciboCreditoSerializer(serializers.ModelSerializer):
+    pago = PagoCreditoSerializer(read_only=True)
+    pago_id = serializers.PrimaryKeyRelatedField( queryset=PagosCredito.objects.all(), source="pago", write_only=True )
+
+    class Meta:
+        model = RecibosCredito
+        fields = "__all__"
+    
+class CreditoListSerializer(serializers.ModelSerializer):
+    cliente = serializers.SerializerMethodField()
+    producto = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Creditos
+        fields = [ "id", "cliente", "producto", "precio_total", "cantidad_cuotas", "cuotas_pagadas", "saldo_pendiente", "estado", "fecha_credito", ]
+
+    def get_cliente(self, obj):
+        return { "id": obj.cliente_id, "nombre": obj.cliente.nombre, "apellido": obj.cliente.apellido, "ci": obj.cliente.ci, }
+
+    def get_producto(self, obj):
+        return { "id": obj.producto_id, "nombre_producto": obj.producto.nombre_producto, "codigo_producto": obj.producto.codigo_producto, }
 

@@ -10,7 +10,12 @@ import cloudinary.uploader
 
 
 from .models import (
+    Clientes,
+    Creditos,
+    PagosCredito,
     Permisos,
+    Productos,
+    RecibosCredito,
     Roles,
     Sucursales,
     Usuarios,
@@ -18,7 +23,12 @@ from .models import (
     UsuariosRoles,
 )
 from .serializers import (
+    ClienteSerializer,
+    CreditoListSerializer,
+    CreditoSerializer,
+    PagoCreditoSerializer,
     PermisosSerializer,
+    ReciboCreditoSerializer,
     RolSerializer,
     RolesPermisosSerializer,
     SucursalesSerializer,
@@ -26,7 +36,10 @@ from .serializers import (
     LoginSerializer,
     UsuariosRolesSerializer,
 )
-
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from decimal import Decimal
 
 """ esto es la seccion de login """
 
@@ -327,3 +340,259 @@ class SucursalesViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+    
+""" nueva seccion  """
+
+class ClientesViewSet(viewsets.ModelViewSet):
+
+    queryset = Clientes.objects.all().order_by("nombre")
+    serializer_class = ClienteSerializer
+
+    def create(self, request, *args, **kwargs):
+
+        ci = request.data.get("ci")
+
+        if Clientes.objects.filter(ci=ci).exists():
+
+            return Response(
+                {
+                    "error":
+                    "Ya existe un cliente con ese CI"
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        cliente = serializer.save()
+
+        return Response(
+            self.get_serializer(cliente).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=True
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+    
+
+class CreditosViewSet(viewsets.ModelViewSet):
+
+    queryset = (
+        Creditos.objects
+        .select_related(
+            "cliente",
+            "producto",
+            "usuario"
+        )
+        .all()
+        .order_by("-id")
+    )
+
+    serializer_class = CreditoSerializer
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return CreditoListSerializer
+        return CreditoSerializer
+
+    def create(self, request, *args, **kwargs):
+
+        producto_id = request.data.get("producto_id")
+        cuotas = int(request.data.get("cantidad_cuotas"))
+
+        try:
+            producto = Productos.objects.get(
+                id=producto_id
+            )
+
+        except Productos.DoesNotExist:
+
+            return Response(
+                {"error": "Producto no encontrado"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        precio_total = producto.precio_unitario
+        cuota_mensual = precio_total / cuotas
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        credito = serializer.save(
+            precio_total=precio_total,
+            cuota_mensual=cuota_mensual,
+            saldo_pendiente=precio_total,
+            estado="PAGANDO"
+        )
+
+        return Response(
+            CreditoSerializer(credito).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    def update(self, request, *args, **kwargs):
+
+        instance = self.get_object()
+
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=True
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+    
+class PagosCreditoViewSet(viewsets.ModelViewSet):
+
+    queryset = (
+        PagosCredito.objects
+        .select_related(
+            "credito",
+            "credito__cliente",
+            "credito__producto"
+        )
+        .all()
+        .order_by("-id")
+    )
+
+    serializer_class = PagoCreditoSerializer
+
+    def create(self, request, *args, **kwargs):
+
+        credito_id = request.data.get("credito_id")
+
+        try:
+            credito = Creditos.objects.select_related(
+                "producto"
+            ).get(id=credito_id)
+
+        except Creditos.DoesNotExist:
+            return Response(
+                {"error": "Crédito no encontrado"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+  
+        if PagosCredito.objects.filter(credito=credito).count() >= credito.cantidad_cuotas:
+            return Response(
+                {"error": "Ya se alcanzó el número máximo de cuotas"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if credito.estado == "PAGADO":
+            return Response(
+                {"error": "El crédito ya fue cancelado"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        pago = serializer.save()
+
+        credito.cuotas_pagadas += 1
+        credito.saldo_pendiente -= pago.monto_pagado
+
+        if credito.saldo_pendiente <= 0:
+            credito.saldo_pendiente = Decimal("0.00")
+            credito.estado = "PAGADO"
+
+            if not credito.stock_descontado:
+                producto = credito.producto
+                if producto.stock > 0:
+                    producto.stock -= 1
+                    producto.save()
+
+                credito.stock_descontado = True
+
+        credito.save()
+
+        return Response(
+            PagoCreditoSerializer(pago).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+class RecibosCreditoViewSet(viewsets.ModelViewSet):
+
+    queryset = (
+        RecibosCredito.objects
+        .select_related(
+            "pago",
+            "pago__credito",
+            "pago__credito__cliente"
+        )
+        .all()
+        .order_by("-id")
+    )
+
+    serializer_class = ReciboCreditoSerializer
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(
+            data=request.data
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        recibo = serializer.save()
+
+        return Response(
+            self.get_serializer(recibo).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def update(self, request, *args, **kwargs):
+
+        instance = self.get_object()
+
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=True
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+    
+@api_view(["GET"])
+def buscar_cliente_ci(request, ci):
+
+    try:
+        cliente = Clientes.objects.get(ci=ci)
+
+        serializer = ClienteSerializer(cliente)
+
+        return Response(serializer.data)
+
+    except Clientes.DoesNotExist:
+
+        return Response(
+            {"error": "Cliente no encontrado"},
+            status=status.HTTP_404_NOT_FOUND
+        )

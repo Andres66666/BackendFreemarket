@@ -23,6 +23,12 @@ router.register(r"detallesventas", views_produtos.DetallesVentasViewSet)
 router.register(r"efectivo", views_produtos.EfectivoViewSet)
 
 router.register(r"sucursales", views_usuarios.SucursalesViewSet)
+
+# rutas de creditos
+router.register(r"clientes",  views_usuarios.ClientesViewSet)
+router.register(r"creditos",  views_usuarios.CreditosViewSet)
+router.register(r"pagoscredito",  views_usuarios.PagosCreditoViewSet)
+router.register(r"reciboscredito",  views_usuarios.RecibosCreditoViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path("login/", views_usuarios.LoginView.as_view(), name="login"),
@@ -36,5 +42,10 @@ urlpatterns = [
         'detallesventas/sucursal/<int:sucursal_id>/',
         views_produtos.detalles_ventas_por_sucursal,
         name='detalles-ventas-por-sucursal',
+    ),
+    path(
+        "clientes/buscar/<str:ci>/",
+        views_usuarios.buscar_cliente_ci,
+        name="buscar_cliente_ci",
     ),
 ]

@@ -191,3 +191,50 @@ class Efectivo(models.Model):
     def __str__(self):
         return f"Efectivo {self.total} Bs - {self.fecha_creacion.date()}"
 
+""" Ventas de celulares a credito """
+
+class Clientes(models.Model):
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    ci = models.CharField(max_length=20, unique=True)
+    telefono = models.CharField(max_length=20)
+    descripcion = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.nombre} {self.apellido}"
+    
+class Creditos(models.Model):
+
+    ESTADOS = (("PENDIENTE", "Pendiente"),("PAGANDO", "Pagando"),("PAGADO", "Pagado"),)
+
+    cliente = models.ForeignKey(Clientes,on_delete=models.CASCADE)
+    producto = models.ForeignKey(Productos,on_delete=models.CASCADE)
+    usuario = models.ForeignKey(Usuarios,on_delete=models.CASCADE)
+    fecha_credito = models.DateField(auto_now_add=True)
+    precio_total = models.DecimalField(max_digits=10,decimal_places=2)
+    cantidad_cuotas = models.PositiveIntegerField()
+    cuota_mensual = models.DecimalField(max_digits=10,decimal_places=2)
+    cuotas_pagadas = models.PositiveIntegerField(default=0)
+    saldo_pendiente = models.DecimalField(max_digits=10,decimal_places=2)
+    estado = models.CharField(max_length=20,choices=ESTADOS,default="PENDIENTE")
+    stock_descontado = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Crédito #{self.id}"
+    
+class PagosCredito(models.Model):
+
+    credito = models.ForeignKey(Creditos,on_delete=models.CASCADE,related_name="pagos")
+    numero_cuota = models.PositiveIntegerField()
+    monto_pagado = models.DecimalField(max_digits=10,decimal_places=2)
+    fecha_pago = models.DateTimeField(auto_now_add=True)
+    observacion = models.TextField(blank=True,null=True)
+
+    def __str__(self):
+        return f"Cuota {self.numero_cuota}"
+    
+class RecibosCredito(models.Model):
+
+    pago = models.OneToOneField(PagosCredito,on_delete=models.CASCADE)
+    numero_recibo = models.CharField(max_length=50,unique=True)
+    fecha_emision = models.DateTimeField(auto_now_add=True)
